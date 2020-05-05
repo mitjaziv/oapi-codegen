@@ -73,13 +73,24 @@ func (a {{.TypeName}}) MarshalJSON() ([]byte, error) {
 }
 {{end}}
 `,
-	"chi-handler.tmpl": `// Handler creates http.Handler with routing matching OpenAPI spec.
+	"chi-handler.tmpl": `{{ range $group := .Groups -}}
+{{ if gt ( len $group.Definitions ) 0 -}}
+
+// Handler creates http.Handler with routing matching OpenAPI spec.
+{{ if eq $group.Name "" -}}
 func Handler(si ServerInterface) http.Handler {
+{{ else -}}
+func Handler(si {{ $group.Name }}Interface) http.Handler {
+{{ end -}}
   return HandlerFromMux(si, chi.NewRouter())
 }
 
 // HandlerFromMux creates http.Handler with routing matching OpenAPI spec based on the provided mux.
+{{ if eq $group.Name "" -}}
 func HandlerFromMux(si ServerInterface, r chi.Router) http.Handler {
+{{ else -}}
+func HandlerFromMux(si {{ $group.Name }}Interface, r chi.Router) http.Handler {
+{{ end -}}
 {{range .Definitions}}r.Group(func(r chi.Router) {
   r.Use({{.OperationId}}Ctx)
   r.{{.Method | lower | title }}("{{.Path | swaggerUriToChiUri}}", si.{{.OperationId}})
@@ -87,12 +98,27 @@ func HandlerFromMux(si ServerInterface, r chi.Router) http.Handler {
 {{end}}
   return r
 }
+
+{{ end }}{{/* if gt ( len $group.Definitions ) 0 */}}
+{{ end }}{{/* range $group := .Groups */}}
 `,
-	"chi-interface.tmpl": `type ServerInterface interface {
-{{range .Definitions}}// {{.Summary | stripNewLines }} ({{.Method}} {{.Path}})
-{{.OperationId}}(w http.ResponseWriter, r *http.Request)
-{{end}}
+	"chi-interface.tmpl": `{{ range $group := .Groups }}
+{{ if gt ( len $group.Definitions ) 0 -}}
+
+{{ if eq $group.Name "" -}}
+type ServerInterface interface {
+{{ else -}}
+type {{ $group.Name }}Interface interface {
+{{ end -}}
+
+{{ range $group.Definitions -}}
+// {{ .Summary | stripNewLines }} ({{ .Method }} {{ .Path }})
+{{ .OperationId }}(w http.ResponseWriter, r *http.Request)
+{{ end }}{{/* $group.Definitions */}}
+
 }
+{{ end }}{{/* if gt ( len $group.Definitions ) 0 */}}
+{{ end }}{{/* range $group := .Groups */}}
 `,
 	"chi-middleware.tmpl": `
 {{range .Definitions}}{{$opid := .OperationId}}

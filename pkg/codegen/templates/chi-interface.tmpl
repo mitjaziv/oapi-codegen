@@ -1,5 +1,17 @@
+{{ range $group := .Groups }}
+{{ if gt ( len $group.Definitions ) 0 -}}
+
+{{ if eq $group.Name "" -}}
 type ServerInterface interface {
-{{range .Definitions}}// {{.Summary | stripNewLines }} ({{.Method}} {{.Path}})
-{{.OperationId}}(w http.ResponseWriter, r *http.Request)
-{{end}}
+{{ else -}}
+type {{ $group.Name }}Interface interface {
+{{ end -}}
+
+{{ range $group.Definitions -}}
+// {{ .Summary | stripNewLines }} ({{ .Method }} {{ .Path }})
+{{ .OperationId }}(w http.ResponseWriter, r *http.Request)
+{{ end }}{{/* $group.Definitions */}}
+
 }
+{{ end }}{{/* if gt ( len $group.Definitions ) 0 */}}
+{{ end }}{{/* range $group := .Groups */}}
