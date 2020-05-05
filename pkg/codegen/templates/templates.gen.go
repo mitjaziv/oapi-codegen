@@ -761,12 +761,12 @@ func RegisterHandlers(router EchoRouter, si ServerInterface) {
 {{end}}
 }
 `,
-	"request-bodies.tmpl": `{{range .}}{{$opid := .OperationId}}
-{{range .Bodies}}
-// {{$opid}}RequestBody defines body for {{$opid}} for application/json ContentType.
-type {{$opid}}{{.NameTag}}RequestBody {{.TypeDef}}
-{{end}}
-{{end}}
+	"request-bodies.tmpl": `{{ range . }}{{ $opid := .OperationId }}
+{{ range .Bodies }}
+// {{ $opid }}RequestBody defines body for {{ $opid }} for application/json ContentType.
+type {{ $opid }}{{ .NameTag }}RequestBody {{ .TypeDef }}
+{{ end }}
+{{ end }}
 `,
 	"server-interface.tmpl": `// ServerInterface represents all server handlers.
 type ServerInterface interface {

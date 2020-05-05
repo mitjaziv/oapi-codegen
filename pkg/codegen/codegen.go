@@ -42,47 +42,49 @@ type Options struct {
 	IncludeTags        []string          // Only include operations that have one of these tags. Ignored when empty.
 	ExcludeTags        []string          // Exclude operations that have one of these tags. Ignored when empty.
 	UserTemplates      map[string]string // Override built-in templates from user-provided files
+	TargetDir          string            // Target folder for generated code.
+	PackageName        string            // Generated package name.
 }
 
-type goImport struct {
-	lookFor     string
-	alias       string
-	packageName string
+type GoImport struct {
+	LookFor     string
+	Alias       string
+	PackageName string
 }
 
-func (i goImport) String() string {
-	if i.alias != "" {
-		return fmt.Sprintf("%s %q", i.alias, i.packageName)
+func (i GoImport) String() string {
+	if i.Alias != "" {
+		return fmt.Sprintf("%s %q", i.Alias, i.PackageName)
 	}
-	return fmt.Sprintf("%q", i.packageName)
+	return fmt.Sprintf("%q", i.PackageName)
 }
 
-type goImports []goImport
+type goImports []GoImport
 
 var (
-	allGoImports = goImports{
-		{lookFor: "base64\\.", packageName: "encoding/base64"},
-		{lookFor: "bytes\\.", packageName: "bytes"},
-		{lookFor: "chi\\.", packageName: "github.com/go-chi/chi"},
-		{lookFor: "context\\.", packageName: "context"},
-		{lookFor: "echo\\.", packageName: "github.com/labstack/echo/v4"},
-		{lookFor: "errors\\.", packageName: "github.com/pkg/errors"},
-		{lookFor: "fmt\\.", packageName: "fmt"},
-		{lookFor: "gzip\\.", packageName: "compress/gzip"},
-		{lookFor: "http\\.", packageName: "net/http"},
-		{lookFor: "io\\.", packageName: "io"},
-		{lookFor: "ioutil\\.", packageName: "io/ioutil"},
-		{lookFor: "json\\.", packageName: "encoding/json"},
-		{lookFor: "openapi3\\.", packageName: "github.com/getkin/kin-openapi/openapi3"},
-		{lookFor: "openapi_types\\.", alias: "openapi_types", packageName: "github.com/deepmap/oapi-codegen/pkg/types"},
-		{lookFor: "path\\.", packageName: "path"},
-		{lookFor: "runtime\\.", packageName: "github.com/deepmap/oapi-codegen/pkg/runtime"},
-		{lookFor: "strings\\.", packageName: "strings"},
-		{lookFor: "time\\.Duration", packageName: "time"},
-		{lookFor: "time\\.Time", packageName: "time"},
-		{lookFor: "url\\.", packageName: "net/url"},
-		{lookFor: "xml\\.", packageName: "encoding/xml"},
-		{lookFor: "yaml\\.", packageName: "gopkg.in/yaml.v2"},
+	AllGoImports = goImports{
+		{LookFor: "base64\\.", PackageName: "encoding/base64"},
+		{LookFor: "bytes\\.", PackageName: "bytes"},
+		{LookFor: "chi\\.", PackageName: "github.com/go-chi/chi"},
+		{LookFor: "context\\.", PackageName: "context"},
+		{LookFor: "echo\\.", PackageName: "github.com/labstack/echo/v4"},
+		{LookFor: "errors\\.", PackageName: "github.com/pkg/errors"},
+		{LookFor: "fmt\\.", PackageName: "fmt"},
+		{LookFor: "gzip\\.", PackageName: "compress/gzip"},
+		{LookFor: "http\\.", PackageName: "net/http"},
+		{LookFor: "io\\.", PackageName: "io"},
+		{LookFor: "ioutil\\.", PackageName: "io/ioutil"},
+		{LookFor: "json\\.", PackageName: "encoding/json"},
+		{LookFor: "openapi3\\.", PackageName: "github.com/getkin/kin-openapi/openapi3"},
+		{LookFor: "openapi_types\\.", Alias: "openapi_types", PackageName: "github.com/deepmap/oapi-codegen/pkg/types"},
+		{LookFor: "path\\.", PackageName: "path"},
+		{LookFor: "runtime\\.", PackageName: "github.com/deepmap/oapi-codegen/pkg/runtime"},
+		{LookFor: "strings\\.", PackageName: "strings"},
+		{LookFor: "time\\.Duration", PackageName: "time"},
+		{LookFor: "time\\.Time", PackageName: "time"},
+		{LookFor: "url\\.", PackageName: "net/url"},
+		{LookFor: "xml\\.", PackageName: "encoding/xml"},
+		{LookFor: "yaml\\.", PackageName: "gopkg.in/yaml.v2"},
 	}
 )
 
@@ -175,8 +177,8 @@ func Generate(swagger *openapi3.Swagger, packageName string, opts Options) (stri
 
 	// Based on module prefixes, figure out which optional imports are required.
 	for _, str := range []string{typeDefinitions, chiServerOut, echoServerOut, clientOut, clientWithResponsesOut, inlinedSpec} {
-		for _, goImport := range allGoImports {
-			match, err := regexp.MatchString(fmt.Sprintf("[^a-zA-Z0-9_]%s", goImport.lookFor), str)
+		for _, goImport := range AllGoImports {
+			match, err := regexp.MatchString(fmt.Sprintf("[^a-zA-Z0-9_]%s", goImport.LookFor), str)
 			if err != nil {
 				return "", errors.Wrap(err, "error figuring out imports")
 			}

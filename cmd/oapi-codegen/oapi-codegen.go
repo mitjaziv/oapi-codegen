@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/deepmap/oapi-codegen/pkg/codegen"
+	"github.com/deepmap/oapi-codegen/pkg/codegen2"
 	"github.com/deepmap/oapi-codegen/pkg/util"
 )
 
@@ -39,20 +40,65 @@ func main() {
 		includeTags  string
 		excludeTags  string
 		templatesDir string
+		targetDir    string
 	)
-	flag.StringVar(&packageName, "package", "", "The package name for generated code")
-	flag.StringVar(&generate, "generate", "types,client,server,spec",
-		`Comma-separated list of code to generate; valid options: "types", "client", "chi-server", "server", "spec", "skip-fmt", "skip-prune"`)
-	flag.StringVar(&outputFile, "o", "", "Where to output generated code, stdout is default")
-	flag.StringVar(&includeTags, "include-tags", "", "Only include operations with the given tags. Comma-separated list of tags.")
-	flag.StringVar(&excludeTags, "exclude-tags", "", "Exclude operations that are tagged with the given tags. Comma-separated list of tags.")
-	flag.StringVar(&templatesDir, "templates", "", "Path to directory containing user templates")
+
+	flag.StringVar(
+		&packageName,
+		"package",
+		"",
+		"The package name for generated code",
+	)
+
+	flag.StringVar(
+		&generate,
+		"generate",
+		"types,client,server,spec",
+		`Comma-separated list of code to generate; valid options: "types", "client", "chi-server", "server", "spec", "skip-fmt", "skip-prune"`,
+	)
+
+	flag.StringVar(
+		&outputFile,
+		"o",
+		"",
+		"Where to output generated code, stdout is default",
+	)
+
+	flag.StringVar(
+		&includeTags,
+		"include-tags",
+		"",
+		"Only include operations with the given tags. Comma-separated list of tags.",
+	)
+
+	flag.StringVar(
+		&excludeTags,
+		"exclude-tags",
+		"",
+		"Exclude operations that are tagged with the given tags. Comma-separated list of tags.",
+	)
+
+	flag.StringVar(
+		&templatesDir,
+		"templates",
+		"",
+		"Path to directory containing user templates",
+	)
+
+	flag.StringVar(
+		&targetDir,
+		"target",
+		"",
+		"Where to output generated code",
+	)
 	flag.Parse()
 
 	if flag.NArg() < 1 {
 		fmt.Println("Please specify a path to a OpenAPI 3.0 spec file")
 		os.Exit(1)
 	}
+
+	opts := codegen.Options{}
 
 	// If the package name has not been specified, we will use the name of the
 	// swagger file.
@@ -63,8 +109,8 @@ func main() {
 		nameParts := strings.Split(baseName, ".")
 		packageName = codegen.ToCamelCase(nameParts[0])
 	}
+	opts.PackageName = packageName
 
-	opts := codegen.Options{}
 	for _, g := range splitCSVArg(generate) {
 		switch g {
 		case "client":
@@ -118,6 +164,19 @@ func main() {
 		}
 	} else {
 		fmt.Println(code)
+	}
+
+	// Generate multiple file code only if target dir is defined.
+	if targetDir != "" {
+		if !strings.HasSuffix(targetDir, "/") {
+			targetDir = targetDir + "/"
+		}
+		opts.TargetDir = targetDir
+
+		err := codegen2.Generate(swagger, opts)
+		if err != nil {
+			errExit("error generating code in multiple files: %s", err)
+		}
 	}
 }
 
