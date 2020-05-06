@@ -111,7 +111,7 @@ func GenerateTypes(t *template.Template, opts codegen.Options, types []codegen.T
 		Imports     []string
 		Type        codegen.TypeDefinition
 	}{
-		PackageName: opts.PackageName,
+		PackageName: "types",
 		Imports:     []string{},
 		Type:        codegen.TypeDefinition{},
 	}
@@ -175,7 +175,7 @@ func GenerateTypesForOperations(t *template.Template, opts codegen.Options, ops 
 		Imports     []string
 		Operation   codegen.OperationDefinition
 	}{
-		PackageName: opts.PackageName,
+		PackageName: "types",
 		Imports:     []string{},
 		Operation:   codegen.OperationDefinition{},
 	}
@@ -211,7 +211,7 @@ func GenerateTypesForOperations(t *template.Template, opts codegen.Options, ops 
 					PackageName string
 					Type        codegen.TypeDefinition
 				}{
-					PackageName: opts.PackageName,
+					PackageName: "types",
 					Type:        typ,
 				}
 
